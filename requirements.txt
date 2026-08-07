@@ -1,0 +1,9 @@
+pandas
+numpy
+matplotlib
+seaborn
+scikit-learnS
+schedule
+google-generativeai
+python-dotenv
+google-genai
