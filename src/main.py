@@ -46,9 +46,6 @@ def main():
     summary = generate_summary(df)
     ai_summary = generate_ai_summary(summary)
 
-    print("\n===== DEBUG =====")
-    print(type(summary))
-    print(summary)
 
     # Email Alert
     send_email(ai_summary)
