@@ -22,6 +22,20 @@ The project combines data cleaning, exploratory data analysis (EDA), data visual
 * Send automated email reports.
 * Export processed datasets and reports.
 
+## 📸 Project Screenshots
+
+### 1. Sales by Region
+![Sales by Region](screenshots/sales_by_region.png)
+
+### 2. Profit by Category
+![Profit by Category](screenshots/profit_by_category.png)
+
+### 3. Gemini AI Business Summary
+![Gemini AI Summary](screenshots/gemini_ai_summary.png)
+
+### 4. Project Execution Output
+![Project Execution](screenshots/project_execution.png)
+
 ## 🛠️ Technologies Used
 
 * Python 3.12
