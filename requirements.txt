@@ -10,3 +10,4 @@ google-genai
 Flask
 plotly
 reportlab
+gunicorn
