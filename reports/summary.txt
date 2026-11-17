@@ -1,8 +1,134 @@
 
+AI BUSINESS ANOMALY DETECTION SYSTEM
+====================================
 
-Total Records      : 9994
-Total Anomalies    : 200
-Total Sales        : 2297200.86
-Total Profit       : 286397.02
-Average Sales      : 229.86
-Average Profit     : 28.66
+DATASET OVERVIEW
+----------------
+Total Records       : 558837
+Total Columns      : 17
+Duplicate Records  : 0
+Missing Values     : 33
+
+ANOMALY ANALYSIS
+----------------
+
+Normal Records     : 547660
+Total Anomalies    : 11177
+Anomaly Percentage : 2.00%
+
+NUMERICAL ANALYSIS
+------------------
+
+year:
+  Average : 2010.04
+  Minimum : 1982.00
+  Maximum : 2015.00
+  Total   : 1123284124.00
+
+condition:
+  Average : 30.76
+  Minimum : 1.00
+  Maximum : 49.00
+  Total   : 17192005.00
+
+odometer:
+  Average : 68317.32
+  Minimum : 1.00
+  Maximum : 999999.00
+  Total   : 38178243563.00
+
+mmr:
+  Average : 13769.27
+  Minimum : 25.00
+  Maximum : 182000.00
+  Total   : 7694779875.00
+
+sellingprice:
+  Average : 13611.33
+  Minimum : 1.00
+  Maximum : 230000.00
+  Total   : 7606512787.00
+
+CATEGORICAL ANALYSIS
+--------------------
+
+Top values in make:
+make
+Ford         103855
+Chevrolet     60197
+Nissan        53946
+Toyota        39871
+Dodge         30710
+
+Top values in model:
+model
+Altima    29748
+F-150     14479
+Fusion    12946
+Camry     12545
+Escape    11861
+
+Top values in trim:
+trim
+Base       66468
+SE         43648
+LX         20757
+Limited    18367
+LT         16915
+
+Top values in body:
+body
+Sedan        212632
+SUV          119292
+sedan         41906
+suv           24552
+Hatchback     21380
+
+Top values in transmission:
+transmission
+automatic    541267
+manual        17544
+sedan            15
+Sedan            11
+
+Top values in vin:
+vin
+automatic            26
+wbanv13588cz57827     5
+5uxfe43579l274932     4
+5n1ar1nn2bc632869     4
+wp0ca2988xu629622     4
+
+Top values in state:
+state
+fl    82945
+ca    73148
+pa    53907
+tx    45913
+ga    34750
+
+Top values in color:
+color
+black     111719
+white     106673
+silver     83389
+gray       82857
+blue       51139
+
+Top values in interior:
+interior
+black    245078
+gray     178581
+beige     59758
+tan       44093
+—         17077
+
+Top values in seller:
+seller
+nissan-infiniti lt               19693
+ford motor credit company llc    19162
+the hertz corporation            18299
+santander consumer               15285
+avis corporation                 12540
+
+SUMMARY GENERATION COMPLETED

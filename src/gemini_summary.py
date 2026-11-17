@@ -2,68 +2,85 @@ import os
 from dotenv import load_dotenv
 from google import genai
 
-# Base Directory
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ENV_PATH = os.path.join(BASE_DIR, ".env")
 
-# Load .env
+REPORTS_FOLDER = os.path.join(BASE_DIR, "reports")
+
 load_dotenv(ENV_PATH)
 
 API_KEY = os.getenv("GEMINI_API_KEY")
 
-print("API KEY FOUND:", API_KEY is not None)
-
-# Gemini Client
-client = genai.Client(api_key=API_KEY)
+client = genai.Client(api_key=API_KEY) if API_KEY else None
 
 
-def generate_ai_summary(summary):
+def generate_ai_summary(summary, dataset_name="dataset"):
 
-    if not API_KEY:
-        print("\nGemini API Key not found.")
+    if not API_KEY or client is None:
+        print("Gemini API Key not found.")
         return summary
 
     prompt = f"""
-You are a Business Data Analyst.
+You are an expert Data Scientist and Business Analyst.
 
-Below is a business report:
+Analyze this dataset report:
 
 {summary}
 
-Generate a professional business insight.
+Instructions:
+- Understand the actual dataset columns.
+- Do not assume specific columns.
+- Do not invent information.
+- Explain anomaly findings.
+- Mention data quality issues where visible.
 
 Include:
-1. Overall Business Performance
-2. Sales Analysis
-3. Profit Analysis
-4. Anomaly Impact
-5. Recommendations
+1. Dataset Overview
+2. Important Insights
+3. Numerical and Categorical Analysis
+4. Anomaly Findings
+5. Potential Risks
+6. Recommendations
+7. Conclusion
 
-Keep it under 200 words.
+Keep the report under 300 words.
 """
 
     try:
 
         response = client.models.generate_content(
             model="gemini-3.5-flash-lite",
-            contents=prompt,
+            contents=prompt
         )
 
         ai_summary = response.text
 
-        print("\n========== GEMINI AI SUMMARY ==========\n")
+        if not ai_summary:
+            return summary
+
+        print("\n========== GEMINI AI SUMMARY ==========")
         print(ai_summary)
 
-        os.makedirs("reports", exist_ok=True)
+        dataset_folder = os.path.join(
+            REPORTS_FOLDER, dataset_name
+        )
+
+        os.makedirs(dataset_folder, exist_ok=True)
+
+        ai_summary_file = os.path.join(
+            dataset_folder, "ai_summary.txt"
+        )
 
         with open(
-            "reports/ai_summary.txt",
+            ai_summary_file,
             "w",
             encoding="utf-8"
-        ) as f:
-            f.write(ai_summary)
+        ) as file:
+
+            file.write(ai_summary)
 
         print("\nAI Summary Saved Successfully!")
+        print(f"Location: {ai_summary_file}")
 
         return ai_summary
 

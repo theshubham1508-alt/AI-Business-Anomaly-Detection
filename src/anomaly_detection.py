@@ -1,54 +1,85 @@
 import os
+import re
+import numpy as np
+import pandas as pd
+
 from sklearn.ensemble import IsolationForest
-
-
-# ==============================
-# Project Paths
-# ==============================
+from sklearn.impute import SimpleImputer
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 PROCESSED_FOLDER = os.path.join(BASE_DIR, "data", "processed")
-ANOMALY_FILE = os.path.join(PROCESSED_FOLDER, "anomalies.csv")
 
 
-def detect_anomalies(df):
+def detect_anomalies(df, dataset_name="dataset"):
 
     print("\n" + "=" * 60)
-    print("ANOMALY DETECTION")
+    print("AUTOMATIC ML ANOMALY DETECTION")
     print("=" * 60)
 
-    # Features used for anomaly detection
-    features = df[["Sales", "Profit", "Quantity", "Discount"]]
+    if df is None or df.empty:
+        print("Dataset is empty.")
+        return df
 
-    # Isolation Forest Model
+    df = df.copy()
+
+    numeric_columns = df.select_dtypes(include=np.number).columns.tolist()
+
+    excluded_words = [
+        "id", "vin", "zip", "postal", "phone", "index"
+    ]
+
+    features = [
+        col for col in numeric_columns
+        if not any(word in col.lower() for word in excluded_words)
+        and df[col].nunique(dropna=True) > 1
+    ]
+
+    if not features:
+        print("No suitable numerical features found.")
+        df["Anomaly"] = 1
+        return df
+
+    X = df[features].replace([np.inf, -np.inf], np.nan)
+
+    # Remove all-empty columns
+    features = [col for col in features if X[col].notna().any()]
+    X = X[features]
+
+    if not features:
+        print("No valid numerical features found.")
+        df["Anomaly"] = 1
+        return df
+
+    imputer = SimpleImputer(strategy="median")
+    X_clean = imputer.fit_transform(X)
+
     model = IsolationForest(
         n_estimators=100,
         contamination=0.02,
-        random_state=42
+        random_state=42,
+        n_jobs=-1
     )
 
-    # Train model & predict anomalies
-    df["Anomaly"] = model.fit_predict(features)
+    print(f"Selected Features: {features}")
+    print("Training Isolation Forest...")
 
-    # Count anomalies
-    anomaly_count = (df["Anomaly"] == -1).sum()
+    predictions = model.fit_predict(X_clean)
+    df["Anomaly"] = predictions
 
-    print(f"\nTotal Anomalies Found : {anomaly_count}")
+    anomaly_count = int((predictions == -1).sum())
 
-    # Filter anomalies
-    anomalies = df[df["Anomaly"] == -1]
+    print(f"\nTotal Records: {len(df)}")
+    print(f"Anomalies Found: {anomaly_count}")
+    print(f"Anomaly Percentage: {anomaly_count / len(df) * 100:.2f}%")
 
-    # Create folder if it doesn't exist
-    os.makedirs(PROCESSED_FOLDER, exist_ok=True)
+    # Separate folder for each dataset
+    dataset_folder = os.path.join(PROCESSED_FOLDER, dataset_name)
+    os.makedirs(dataset_folder, exist_ok=True)
 
-    # Save anomalies
-    anomalies.to_csv(
-        ANOMALY_FILE,
-        index=False
-    )
+    anomaly_file = os.path.join(dataset_folder, "anomalies.csv")
 
-    print("\nAnomalies Saved Successfully!")
-    print(f"Location : {ANOMALY_FILE}")
+    df[df["Anomaly"] == -1].to_csv(anomaly_file, index=False)
+
+    print(f"\nAnomalies Saved: {anomaly_file}")
 
     return df

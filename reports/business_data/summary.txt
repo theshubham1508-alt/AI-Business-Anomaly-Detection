@@ -1,0 +1,149 @@
+
+AI BUSINESS ANOMALY DETECTION SYSTEM
+====================================
+
+DATASET: business_data
+
+DATASET OVERVIEW
+----------------
+Total Records: 9994
+Total Columns: 22
+Duplicate Records: 0
+Missing Values: 0
+
+
+ANOMALY ANALYSIS
+----------------
+Normal Records: 9794
+Total Anomalies: 200
+Anomaly Percentage: 2.00%
+
+NUMERICAL ANALYSIS
+------------------
+
+Row ID:
+Average: 4997.50
+Minimum: 1.00
+Maximum: 9994.00
+
+Postal Code:
+Average: 55190.38
+Minimum: 1040.00
+Maximum: 99301.00
+
+Sales:
+Average: 229.86
+Minimum: 0.44
+Maximum: 22638.48
+
+Quantity:
+Average: 3.79
+Minimum: 1.00
+Maximum: 14.00
+
+Discount:
+Average: 0.16
+Minimum: 0.00
+Maximum: 0.80
+
+Profit:
+Average: 28.66
+Minimum: -6599.98
+Maximum: 8399.98
+
+CATEGORICAL ANALYSIS
+--------------------
+
+Top values in Order ID:
+Order ID
+CA-2017-100111    14
+CA-2017-157987    12
+US-2016-108504    11
+CA-2016-165330    11
+CA-2015-131338    10
+
+Top values in Ship Mode:
+Ship Mode
+Standard Class    5968
+Second Class      1945
+First Class       1538
+Same Day           543
+
+Top values in Customer ID:
+Customer ID
+WB-21850    37
+MA-17560    34
+JL-15835    34
+PP-18955    34
+JD-15895    32
+
+Top values in Customer Name:
+Customer Name
+William Brown       37
+Matt Abelman        34
+John Lee            34
+Paul Prost          34
+Jonathan Doherty    32
+
+Top values in Segment:
+Segment
+Consumer       5191
+Corporate      3020
+Home Office    1783
+
+Top values in Country:
+Country
+United States    9994
+
+Top values in City:
+City
+New York City    915
+Los Angeles      747
+Philadelphia     537
+San Francisco    510
+Seattle          428
+
+Top values in State:
+State
+California      2001
+New York        1128
+Texas            985
+Pennsylvania     587
+Washington       506
+
+Top values in Region:
+Region
+West       3203
+East       2848
+Central    2323
+South      1620
+
+Top values in Product ID:
+Product ID
+OFF-PA-10001970    19
+TEC-AC-10003832    18
+FUR-FU-10004270    16
+FUR-CH-10001146    15
+TEC-AC-10003628    15
+
+Top values in Category:
+Category
+Office Supplies    6026
+Furniture          2121
+Technology         1847
+
+Top values in Sub-Category:
+Sub-Category
+Binders        1523
+Paper          1370
+Furnishings     957
+Phones          889
+Storage         846
+
+Top values in Product Name:
+Product Name
+Staple envelope            48
+Easy-staple paper          46
+Staples                    46
+Avery Non-Stick Binders    20
+Staples in misc. colors    19

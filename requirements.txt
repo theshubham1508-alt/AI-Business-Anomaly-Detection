@@ -2,7 +2,7 @@ pandas
 numpy
 matplotlib
 seaborn
-scikit-learnS
+scikit-learn
 schedule
 google-generativeai
 python-dotenv

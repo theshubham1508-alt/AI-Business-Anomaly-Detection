@@ -1,40 +1,92 @@
 import os
+import numpy as np
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
 REPORTS_FOLDER = os.path.join(BASE_DIR, "reports")
-SUMMARY_FILE = os.path.join(REPORTS_FOLDER, "summary.txt")
 
 
-def generate_summary(df):
+def generate_summary(df, dataset_name="dataset"):
+
+    if df is None or df.empty:
+        return "Dataset is empty."
 
     total_records = len(df)
-    total_anomalies = (df["Anomaly"] == -1).sum()
-    total_sales = df["Sales"].sum()
-    total_profit = df["Profit"].sum()
-    avg_sales = df["Sales"].mean()
-    avg_profit = df["Profit"].mean()
 
     summary = f"""
+AI BUSINESS ANOMALY DETECTION SYSTEM
+====================================
 
-Total Records      : {total_records}
-Total Anomalies    : {total_anomalies}
-Total Sales        : {total_sales:.2f}
-Total Profit       : {total_profit:.2f}
-Average Sales      : {avg_sales:.2f}
-Average Profit     : {avg_profit:.2f}
+DATASET: {dataset_name}
+
+DATASET OVERVIEW
+----------------
+Total Records: {total_records}
+Total Columns: {len(df.columns)}
+Duplicate Records: {df.duplicated().sum()}
+Missing Values: {df.isnull().sum().sum()}
 """
 
-    print(summary)
+    # Anomaly analysis
+    if "Anomaly" in df.columns:
 
-    # Create reports folder if it doesn't exist
-    os.makedirs(REPORTS_FOLDER, exist_ok=True)
+        total_anomalies = int((df["Anomaly"] == -1).sum())
+        normal_records = int((df["Anomaly"] == 1).sum())
 
-    # Save summary
-    with open(SUMMARY_FILE, "w", encoding="utf-8") as file:
+        summary += f"""
+
+ANOMALY ANALYSIS
+----------------
+Normal Records: {normal_records}
+Total Anomalies: {total_anomalies}
+Anomaly Percentage: {total_anomalies / total_records * 100:.2f}%
+"""
+
+    # Numerical analysis
+    summary += "\nNUMERICAL ANALYSIS\n------------------\n"
+
+    numeric_columns = df.select_dtypes(include=np.number).columns
+
+    for column in numeric_columns:
+
+        if column == "Anomaly":
+            continue
+
+        values = df[column].replace(
+            [np.inf, -np.inf], np.nan
+        ).dropna()
+
+        if not values.empty:
+
+            summary += f"""
+{column}:
+Average: {values.mean():.2f}
+Minimum: {values.min():.2f}
+Maximum: {values.max():.2f}
+"""
+
+    # Categorical analysis
+    summary += "\nCATEGORICAL ANALYSIS\n--------------------\n"
+
+    categorical_columns = df.select_dtypes(
+        include=["object", "category", "bool"]
+    ).columns
+
+    for column in categorical_columns:
+
+        summary += f"\nTop values in {column}:\n"
+        summary += df[column].value_counts().head(5).to_string()
+        summary += "\n"
+
+    # Save dataset-specific summary
+    dataset_folder = os.path.join(REPORTS_FOLDER, dataset_name)
+    os.makedirs(dataset_folder, exist_ok=True)
+
+    summary_file = os.path.join(dataset_folder, "summary.txt")
+
+    with open(summary_file, "w", encoding="utf-8") as file:
         file.write(summary)
 
-    print("Summary Saved Successfully!")
-    print(f"Location : {SUMMARY_FILE}")
+    print("\nSummary Saved Successfully!")
+    print(f"Location: {summary_file}")
 
     return summary
