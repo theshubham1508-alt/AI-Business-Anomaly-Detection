@@ -56,7 +56,7 @@ def perform_eda(df):
     print("-" * 40)
 
     categorical_columns = df.select_dtypes(
-        include=["object", "category", "bool"]
+        include=["object", "category", "bool", "str"]
     ).columns.tolist()
 
     if categorical_columns:

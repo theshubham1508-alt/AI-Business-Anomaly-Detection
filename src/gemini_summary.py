@@ -14,9 +14,11 @@ API_KEY = os.getenv("GEMINI_API_KEY")
 client = genai.Client(api_key=API_KEY) if API_KEY else None
 
 
-def generate_ai_summary(summary, dataset_name="dataset"):
+def generate_ai_summary(summary, dataset_name="dataset", strict=False):
 
     if not API_KEY or client is None:
+        if strict:
+            raise RuntimeError("GEMINI_API_KEY is not configured.")
         print("Gemini API Key not found.")
         return summary
 
@@ -56,6 +58,8 @@ Keep the report under 300 words.
         ai_summary = response.text
 
         if not ai_summary:
+            if strict:
+                raise RuntimeError("Gemini returned an empty summary.")
             return summary
 
         print("\n========== GEMINI AI SUMMARY ==========")
@@ -87,4 +91,6 @@ Keep the report under 300 words.
     except Exception as e:
 
         print("\nGemini Error:", e)
+        if strict:
+            raise RuntimeError(f"Gemini summary generation failed: {e}") from e
         return summary

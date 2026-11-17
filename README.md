@@ -47,6 +47,15 @@ The project combines data cleaning, exploratory data analysis (EDA), data visual
 * Google Gemini API
 * SMTP / Gmail
 * python-dotenv
+* Flask
+* Plotly
+* ReportLab
+
+## 🌌 ANOMALY INTELLIGENCE Web Application
+
+The Flask dashboard wraps the existing Python analysis modules. Upload a CSV to explore its columns and data quality, clean it, run exploratory analysis and Isolation Forest, view interactive Plotly charts, generate a Gemini summary, download cleaned/anomaly CSVs and analysis TXT/PDF reports, or send a report through Gmail SMTP. Each upload has a separate workspace and generated artifacts.
+
+Uploads are stored locally under the ignored `instance/datasets/` directory. The web application accepts CSV files up to 32 MB. Gemini and email features require their respective environment variables; the rest of the analysis works without external API credentials.
 
 ## 🧠 Machine Learning Algorithm
 
@@ -203,14 +212,28 @@ Create a `.env` file in the project root directory:
 GEMINI_API_KEY=your_gemini_api_key
 SENDER_EMAIL=your_gmail_address
 EMAIL_APP_PASSWORD=your_gmail_app_password
-RECEIVER_EMAIL=receiver_email_address
+RECEIVER_EMAIL=optional_default_recipient
+FLASK_SECRET_KEY=generate_a_long_random_secret
 ```
 
 Get your Gemini API key from Google AI Studio.
 
 **Important:** Never upload your `.env` file or expose API keys and email passwords on GitHub.
+Generate a persistent Flask session key with `python -c "import secrets; print(secrets.token_hex(32))"` and use the printed value for `FLASK_SECRET_KEY`. Keep it private; sessions will reset after restart if this setting is omitted.
 
-### 6. Run the Project
+For Gmail, use a Google App Password. The web dashboard lets you enter a recipient address when sending a report; `RECEIVER_EMAIL` remains available as the default for the command-line workflow.
+
+### 6. Run the Web Application
+
+From the project root:
+
+```powershell
+python app.py
+```
+
+Open [http://127.0.0.1:5000](http://127.0.0.1:5000). To configure the bind address or port, set `FLASK_HOST` or `FLASK_PORT`. Debug mode is off by default; only enable `FLASK_DEBUG=true` for local development.
+
+### 7. Run the Original Command-Line Workflow
 
 ```bash
 python src/main.py
@@ -230,7 +253,6 @@ After successful execution, the project generates:
 
 ## 🚀 Future Improvements
 
-* Interactive dashboard using Streamlit.
 * Power BI business intelligence dashboard.
 * Real-time business anomaly monitoring.
 * Comparison with other anomaly detection algorithms.

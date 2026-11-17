@@ -11,11 +11,11 @@ ENV_PATH = os.path.join(BASE_DIR, ".env")
 load_dotenv(ENV_PATH)
 
 
-def send_email(summary):
+def send_email(summary, recipient_email=None):
 
     sender_email = os.getenv("SENDER_EMAIL")
     app_password = os.getenv("EMAIL_APP_PASSWORD")
-    receiver_email = os.getenv("RECEIVER_EMAIL")
+    receiver_email = recipient_email or os.getenv("RECEIVER_EMAIL")
 
     print("\n" + "=" * 50)
     print("AUTOMATIC EMAIL REPORT")

@@ -68,7 +68,7 @@ Maximum: {values.max():.2f}
     summary += "\nCATEGORICAL ANALYSIS\n--------------------\n"
 
     categorical_columns = df.select_dtypes(
-        include=["object", "category", "bool"]
+        include=["object", "category", "bool", "str"]
     ).columns
 
     for column in categorical_columns:

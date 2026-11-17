@@ -1,6 +1,9 @@
 import os
 import re
 import numpy as np
+import matplotlib
+
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -31,9 +34,12 @@ def create_visualizations(df, dataset_name="dataset"):
     numeric_columns = df.select_dtypes(
         include=np.number
     ).columns.tolist()
+    numeric_columns = [
+        column for column in numeric_columns if column != "Anomaly"
+    ]
 
     categorical_columns = df.select_dtypes(
-        include=["object", "category", "bool"]
+        include=["object", "category", "bool", "str"]
     ).columns.tolist()
 
     # Numerical distribution

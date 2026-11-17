@@ -12,4 +12,6 @@ venv312/
 .venv/
 
 # Generated files
-
+instance/
+data/processed/web_*/
+reports/web_*/

@@ -17,8 +17,7 @@ def detect_anomalies(df, dataset_name="dataset"):
     print("=" * 60)
 
     if df is None or df.empty:
-        print("Dataset is empty.")
-        return df
+        raise ValueError("Dataset is empty; anomaly detection cannot run.")
 
     df = df.copy()
 
@@ -35,9 +34,9 @@ def detect_anomalies(df, dataset_name="dataset"):
     ]
 
     if not features:
-        print("No suitable numerical features found.")
-        df["Anomaly"] = 1
-        return df
+        raise ValueError(
+            "No suitable numerical features found; anomaly detection cannot run."
+        )
 
     X = df[features].replace([np.inf, -np.inf], np.nan)
 
@@ -46,9 +45,9 @@ def detect_anomalies(df, dataset_name="dataset"):
     X = X[features]
 
     if not features:
-        print("No valid numerical features found.")
-        df["Anomaly"] = 1
-        return df
+        raise ValueError(
+            "No valid numerical features found; anomaly detection cannot run."
+        )
 
     imputer = SimpleImputer(strategy="median")
     X_clean = imputer.fit_transform(X)

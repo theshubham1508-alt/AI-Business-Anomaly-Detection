@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block title %}{{ manifest.filename }} · ANOMALY INTELLIGENCE{% endblock %}
+{% block breadcrumb %}DATASET / {{ manifest.filename|upper }}{% endblock %}
+{% block head_extra %}<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>{% endblock %}
+{% block content %}
+<div class="dataset-heading">
+  <div>
+    <div class="eyebrow"><span class="eyebrow-line"></span> DATASET EXPLORER / {{ manifest.id[:8]|upper }}</div>
+    <h1>{{ manifest.filename }}</h1>
+    <p class="muted-copy">Uploaded {{ manifest.created_at[:10] }} <span class="inline-dot"></span> CSV workspace</p>
+  </div>
+  <div class="heading-actions">
+    <form action="{{ url_for('analyze_dataset', dataset_id=manifest.id) }}" method="post" data-analysis-form>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="button button-primary" type="submit" data-analysis-button><span>Run full analysis</span><span class="button-arrow">↗</span></button>
+    </form>
+  </div>
+</div>
+<div class="analysis-progress" id="analysisProgress" role="status" aria-live="polite" hidden>
+  <span class="progress-spinner"></span><span><strong>Analysis in progress</strong><small>Cleaning data, running Isolation Forest, and generating reports. Keep this page open.</small></span>
+</div>
+<div class="flash-stack" id="asyncNotices" role="status" aria-live="polite" hidden></div>
+
+<section class="metrics-grid">
+  <article class="metric-card"><span class="metric-label">TOTAL RECORDS</span><strong>{{ "{:,}".format(rows) }}</strong><small>Rows in uploaded dataset</small><span class="metric-spark cyan-spark">⌁</span></article>
+  <article class="metric-card"><span class="metric-label">FEATURES</span><strong>{{ column_count }}</strong><small>{{ numeric_count }} numeric <i>·</i> {{ categorical_count }} categorical</small><span class="metric-spark purple-spark">▤</span></article>
+  <article class="metric-card"><span class="metric-label">MISSING VALUES</span><strong>{{ "{:,}".format(missing_total) }}</strong><small>Across {{ missing|length }} columns</small><span class="metric-spark coral-spark">◌</span></article>
+  <article class="metric-card"><span class="metric-label">DUPLICATE ROWS</span><strong>{{ "{:,}".format(duplicates) }}</strong><small>Exact row matches</small><span class="metric-spark mint-spark">⟳</span></article>
+</section>
+
+<section class="panel explorer-panel">
+  <div class="section-heading">
+    <div><div class="eyebrow">01 / DATASET EXPLORER</div><h2>Understand what you’re working with</h2></div>
+    <span class="data-badge"><span></span> {{ rows }} ROWS · {{ column_count }} COLUMNS</span>
+  </div>
+  <div class="column-chips">
+    {% for column in columns %}<span class="column-chip"><i>{{ '%02d'|format(loop.index) }}</i>{{ column }}</span>{% endfor %}
+  </div>
+  <div class="table-wrap">{{ preview|safe }}</div>
+  {% if missing %}
+  <div class="missing-list"><strong>Columns with missing values</strong>{% for column, count in missing.items() %}<span>{{ column }} <b>{{ count }}</b></span>{% endfor %}</div>
+  {% else %}
+  <div class="quality-note"><span>✓</span> No missing values detected in the uploaded file.</div>
+  {% endif %}
+</section>
+
+<section class="panel workflow-panel" id="cleaning">
+  <div class="section-heading">
+    <div><div class="eyebrow">02 / PREPARE</div><h2>Data cleaning</h2></div>
+    {% if manifest.status in ['cleaned', 'analyzed'] %}<span class="data-badge complete-badge"><span></span> CLEANED</span>{% endif %}
+  </div>
+  <div class="workflow-content">
+    <div class="workflow-description"><p>Normalize headers, remove duplicate records, handle infinite values, standardize detected dates, and impute missing values using the existing cleaning pipeline.</p>
+      {% if manifest.cleaning %}
+      <div class="result-inline"><span>{{ manifest.cleaning.duplicates_removed }} duplicates removed</span><span>{{ manifest.cleaning.missing_before }} → {{ manifest.cleaning.missing_after }} missing values</span><span>{{ manifest.cleaning.output_rows }} rows retained</span></div>
+      {% endif %}
+    </div>
+    <div class="workflow-buttons">
+      <form action="{{ url_for('clean_dataset', dataset_id=manifest.id) }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="button button-secondary" type="submit">Clean dataset <span>→</span></button>
+      </form>
+      {% if manifest.status in ['cleaned', 'analyzed'] %}
+      <a class="button button-quiet" href="{{ url_for('download_report', dataset_id=manifest.id, kind='cleaned') }}">Download cleaned CSV <span>↓</span></a>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+<section class="panel eda-panel" id="eda">
+  <div class="section-heading">
+    <div><div class="eyebrow">03 / EXPLORE</div><h2>Exploratory data analysis</h2></div>
+    <span class="subtle mono">INTERACTIVE / LIVE DATA</span>
+  </div>
+  {% if numerical_summary or categorical_summary %}
+  <div class="eda-tables">
+    {% if numerical_summary %}<div class="eda-table-card"><h3>Numerical profile</h3><div class="table-wrap">{{ numerical_summary|safe }}</div></div>{% endif %}
+    {% if categorical_summary %}<div class="eda-table-card"><h3>Category signals</h3>
+      {% for group in categorical_summary %}
+      <div class="category-group"><strong>{{ group["column"] }}</strong><div>{% for value, count in group["values"] %}<span>{{ value }} <b>{{ count }}</b></span>{% endfor %}</div></div>
+      {% endfor %}
+    </div>{% endif %}
+  </div>
+  {% endif %}
+  {% if charts %}
+  <div class="chart-grid">
+    {% for chart in charts %}
+    <article class="chart-card"><div class="chart-title"><span class="chart-marker"></span>{{ chart.title }}</div><div class="plotly-chart" data-figure="{{ chart.figure|forceescape }}"></div></article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state"><span class="empty-orbit">▥</span><strong>No plottable fields found</strong><p>This dataset has no numeric or categorical columns suitable for a chart.</p></div>
+  {% endif %}
+</section>
+
+<section class="panel anomaly-panel" id="intelligence">
+  <div class="section-heading">
+    <div><div class="eyebrow">04 / DETECT</div><h2>Anomaly intelligence</h2></div>
+    {% if manifest.status == 'analyzed' %}<span class="data-badge complete-badge"><span></span> MODEL COMPLETE</span>{% elif manifest.status == 'analyzing' %}<span class="data-badge pending-badge"><span></span> ANALYSIS IN PROGRESS</span>{% else %}<span class="data-badge pending-badge"><span></span> AWAITING ANALYSIS</span>{% endif %}
+  </div>
+  {% if manifest.status == 'analyzed' %}
+  <div class="anomaly-results">
+    <div class="anomaly-number"><strong>{{ "{:,}".format(manifest.anomaly_count) }}</strong><span>ANOMALIES IDENTIFIED</span></div>
+    <div class="anomaly-meter"><div class="meter-label"><span>Records flagged by Isolation Forest</span><b>{{ "%.2f"|format(manifest.anomaly_percent) }}%</b></div><div class="meter-track"><i style="width: {{ [manifest.anomaly_percent, 100]|min }}%"></i></div><div class="meter-legend"><span>{{ "{:,}".format(manifest.normal_count) }} normal records</span><span>{{ "{:,}".format(manifest.rows) }} total analyzed</span></div></div>
+    <div class="method-note"><span>◈</span><span><b>Isolation Forest</b><small>Unsupervised pattern detection · 2% contamination setting</small></span></div>
+  </div>
+  <p class="disclaimer">An anomaly is a statistical outlier, not a determination of fraud or business error. Review flagged records in context.</p>
+  <div class="record-previews">
+    <article class="record-preview-card">
+      <div class="record-preview-heading"><h3>Flagged anomaly records</h3><span>{{ manifest.anomaly_count }} TOTAL · FIRST 8</span></div>
+      <div class="table-wrap">{{ anomaly_preview|safe }}</div>
+    </article>
+    <article class="record-preview-card">
+      <div class="record-preview-heading"><h3>Normal records</h3><span>{{ manifest.normal_count }} TOTAL · FIRST 8</span></div>
+      <div class="table-wrap">{{ normal_preview|safe }}</div>
+    </article>
+  </div>
+  {% else %}
+  <div class="pending-analysis"><div class="pending-orbit">✳</div><div><strong>Ready to find the signal</strong><p>Run the full analysis to apply cleaning, EDA, Isolation Forest, and generate downloadable results.</p></div>
+    <form action="{{ url_for('analyze_dataset', dataset_id=manifest.id) }}" method="post" data-analysis-form><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-primary" type="submit" data-analysis-button>Analyze this dataset <span class="button-arrow">↗</span></button></form>
+  </div>
+  {% endif %}
+</section>
+
+<section class="bottom-grid">
+  <article class="panel ai-panel">
+    <div class="section-heading">
+      <div><div class="eyebrow">05 / SYNTHESIZE</div><h2>Gemini AI intelligence</h2></div><span class="ai-sigil">✳</span>
+    </div>
+    {% if manifest.status == 'analyzed' %}
+      {% if ai_summary %}
+      <div class="ai-summary">{{ ai_summary }}</div>
+      <a class="text-link" href="{{ url_for('download_report', dataset_id=manifest.id, kind='ai-summary') }}">Download AI summary <span>↓</span></a>
+      {% else %}
+      <p class="muted-copy">Generate evidence-based findings and recommendations from this dataset’s actual analysis report. Requires <span class="inline-code">GEMINI_API_KEY</span>.</p>
+      <form action="{{ url_for('create_ai_summary', dataset_id=manifest.id) }}" method="post"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}"><button class="button button-secondary" type="submit">Generate AI summary <span>✳</span></button></form>
+      {% endif %}
+    {% else %}
+      <p class="muted-copy">Complete the analysis first to give Gemini a grounded dataset report to interpret.</p>
+      <span class="locked-label">LOCKED · ANALYSIS REQUIRED</span>
+    {% endif %}
+  </article>
+  <article class="panel reports-panel" id="reports">
+    <div class="section-heading"><div><div class="eyebrow">06 / DELIVER</div><h2>Reports center</h2></div><span class="reports-glyph">⇩</span></div>
+    {% if manifest.status == 'analyzed' %}
+    <div class="report-links">
+      <a href="{{ url_for('download_report', dataset_id=manifest.id, kind='cleaned') }}"><span class="report-file-icon">CSV</span><span><b>Cleaned dataset</b><small>Processed records · CSV</small></span><i>↓</i></a>
+      <a href="{{ url_for('download_report', dataset_id=manifest.id, kind='anomalies') }}"><span class="report-file-icon purple-file">CSV</span><span><b>Anomalies</b><small>{{ manifest.anomaly_count }} flagged records · CSV</small></span><i>↓</i></a>
+      <a href="{{ url_for('download_report', dataset_id=manifest.id, kind='summary') }}"><span class="report-file-icon text-file">TXT</span><span><b>Analysis summary</b><small>Dataset findings · TXT</small></span><i>↓</i></a>
+      <a href="{{ url_for('download_report', dataset_id=manifest.id, kind='pdf') }}"><span class="report-file-icon pdf-file">PDF</span><span><b>Analysis report</b><small>Printable report · PDF</small></span><i>↓</i></a>
+      {% if ai_summary %}<a href="{{ url_for('download_report', dataset_id=manifest.id, kind='ai-summary') }}"><span class="report-file-icon ai-file">AI</span><span><b>Gemini intelligence</b><small>AI findings · TXT</small></span><i>↓</i></a>{% endif %}
+    </div>
+    <form class="email-form" action="{{ url_for('email_report', dataset_id=manifest.id) }}" method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label for="recipient">Send report by email</label>
+      <div><input id="recipient" type="email" name="recipient" placeholder="recipient@example.com" maxlength="254" required><button class="button button-primary" type="submit">Send <span>↗</span></button></div>
+      <small>Uses Gmail SMTP credentials from your environment.</small>
+    </form>
+    {% else %}
+    <div class="empty-state compact-empty"><span class="empty-orbit">⇩</span><strong>Reports appear after analysis</strong><p>Run the full pipeline to generate downloadable files.</p></div>
+    {% endif %}
+  </article>
+</section>
+
+{% if graphs %}
+<section class="panel graph-gallery">
+  <div class="section-heading"><div><div class="eyebrow">GENERATED ARTIFACTS</div><h2>Report visualizations</h2></div><span class="subtle mono">{{ graphs|length }} GRAPH{{ '' if graphs|length == 1 else 'S' }}</span></div>
+  <div class="gallery-grid">{% for graph in graphs %}<a class="gallery-item" href="{{ url_for('dataset_graph', dataset_id=manifest.id, filename=graph) }}" target="_blank" rel="noopener"><img src="{{ url_for('dataset_graph', dataset_id=manifest.id, filename=graph) }}" alt="{{ graph|replace('_', ' ')|replace('.png', '') }}" loading="lazy"><span>{{ graph|replace('_', ' ')|replace('.png', '') }}</span></a>{% endfor %}</div>
+</section>
+{% endif %}
+{% endblock %}
+{% block scripts %}
+<script>
+  document.querySelectorAll(".plotly-chart").forEach((element) => {
+    try {
+      const figure = JSON.parse(element.dataset.figure);
+      Plotly.newPlot(element, figure.data, figure.layout, {responsive: true, displayModeBar: false});
+    } catch (error) {
+      element.textContent = "This chart could not be rendered.";
+    }
+  });
+</script>
+{% endblock %}

@@ -58,7 +58,7 @@ def clean_data(df, dataset_name="dataset"):
 
     # Fill categorical missing values
     categorical_columns = df.select_dtypes(
-        include=["object", "category"]
+        include=["object", "category", "str"]
     ).columns
 
     for column in categorical_columns:

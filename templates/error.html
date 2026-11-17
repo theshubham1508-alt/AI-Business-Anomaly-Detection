@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}{{ status_code }} · ANOMALY INTELLIGENCE{% endblock %}
+{% block content %}
+<section class="error-page panel">
+  <div class="eyebrow">REQUEST / {{ status_code }}</div>
+  <div class="error-code">{{ status_code }}</div>
+  <h1>We couldn't complete that request.</h1>
+  <p class="muted-copy">{{ message }}</p>
+  <a class="button button-primary" href="{{ url_for('home') }}">Return to overview <span>↗</span></a>
+</section>
+{% endblock %}

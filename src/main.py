@@ -96,7 +96,11 @@ def main():
     create_visualizations(df, dataset_name)
 
     # STEP 6: Detect Anomalies
-    df = detect_anomalies(df, dataset_name)
+    try:
+        df = detect_anomalies(df, dataset_name)
+    except ValueError as error:
+        print(f"Anomaly detection failed: {error}")
+        return
 
     # STEP 7: Generate Summary
     summary = generate_summary(df, dataset_name)
